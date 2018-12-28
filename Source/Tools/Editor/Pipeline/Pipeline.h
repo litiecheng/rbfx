@@ -23,62 +23,47 @@
 #pragma once
 
 
-#include <Urho3D/Core/Object.h>
 #include <Urho3D/IO/FileWatcher.h>
 #include <Urho3D/Resource/XMLFile.h>
+#include <Urho3D/Scene/Serializable.h>
+#include <Toolbox/IO/ContentUtilities.h>
 
-#include "ImportAsset.h"
-
+#include "Converter.h"
 
 namespace Urho3D
 {
 
-class AssetConversionParameters;
+class Converter;
 
-class AssetConverter : public Object
+class Pipeline : public Serializable
 {
-    URHO3D_OBJECT(AssetConverter, Object);
+    URHO3D_OBJECT(Pipeline, Serializable);
 public:
-    /// Construct.
-    explicit AssetConverter(Context* context);
-    /// Destruct.
-    ~AssetConverter() override;
-
+    ///
+    explicit Pipeline(Context* context);
+    ///
+    ~Pipeline() override;
+    ///
+    bool LoadJSON(const JSONValue& source) override;
     /// Set cache path. Converted assets will be placed there.
     void SetCachePath(const String& cachePath);
-    /// Returns asset cache path.
-    String GetCachePath() const;
     /// Watch directory for changed assets and automatically convert them.
     void AddAssetDirectory(const String& path);
-    /// Stop watching directory for changed assets.
-    void RemoveAssetDirectory(const String& path);
-    /// Request checking of all assets and convert out of date assets.
-    void VerifyCacheAsync();
-    /// Request conversion of single asset.
-    void ConvertAssetAsync(const String& resourceName);
+    /// Execute asset converters specified in `converterKinds` in worker threads. Returns immediately.
+    void BuildCache(ConverterKinds converterKinds);
 
 protected:
     /// Converts asset. Blocks calling thread.
-    bool ConvertAsset(const String& resourceName, ContentType type);
-    /// Returns true if asset in the cache folder is missing or out of date.
-    bool IsCacheOutOfDate(const String& resourceName);
-    /// Return a list of converted assets in the cache.
-    Vector<String> GetCacheAssets(const String& resourceName);
+    void ConvertAssets(const String& resourcePath, const StringVector& resourceNames, ConverterKinds converterKinds);
     /// Watches for changed files and requests asset conversion if needed.
     void DispatchChangedAssets();
-    /// Handle console commands.
-    void OnConsoleCommand(VariantMap& args);
 
+    ///
+    String cachePath_;
+    ///
+    Vector<SharedPtr<Converter>> converters_;
     /// List of file watchers responsible for watching game data folders for asset changes.
     Vector<SharedPtr<FileWatcher>> watchers_;
-    /// Timer used for delaying out of date asset checks.
-    Timer checkTimer_;
-    /// Absolute path to asset cache.
-    String cachePath_;
-    /// Registered asset importers.
-    Vector<SharedPtr<ImportAsset>> assetImporters_;
-    /// Queue of file paths that should be evaluated and converted if necessary.
-    StringVector conversionQueue_;
 };
 
 }

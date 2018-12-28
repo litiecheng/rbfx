@@ -23,22 +23,29 @@
 #pragma once
 
 
-#include "ImportAsset.h"
+#include "Converter.h"
+
 
 namespace Urho3D
 {
 
-class ImportAssimp : public ImportAsset
+class FilterResources : public Converter
 {
-    URHO3D_OBJECT(ImportAssimp, ImportAsset);
+    URHO3D_OBJECT(FilterResources, Converter);
 public:
-    explicit ImportAssimp(Context* context);
+    ///
+    explicit FilterResources(Context* context);
+    ///
+    static void RegisterObject(Context* context);
 
-    bool Accepts(const String& path, ContentType type) override;
+    void Execute(const String& resourcePath, const StringVector& input) override;
 
-    bool Convert(const String& path) override;
-
-    bool RunConverter(const String& path) override;
+protected:
+    ///
+    StringVector hasTags_;
+    ///
+    StringVector doesntHaveTags_;
 };
+
 
 }

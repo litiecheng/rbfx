@@ -23,38 +23,50 @@
 #pragma once
 
 
-#include <Toolbox/SystemUI/ResourceBrowser.h>
-#include "Inspector/ResourceInspector.h"
-#include "Tabs/Tab.h"
-
+#include <Urho3D/Scene/Serializable.h>
 
 namespace Urho3D
 {
 
-/// Resource browser tab.
-class ResourceTab : public Tab
+enum ConverterKind
 {
-    URHO3D_OBJECT(ResourceTab, Tab)
-public:
-    /// Construct.
-    explicit ResourceTab(Context* context);
+    /// converter will only run when explicitly invoked.
+    CONVERTER_OFFLINE,
+    /// Converter is executed whenever source assets are modified.
+    CONVERTER_ONLINE,
+};
+URHO3D_FLAGSET(ConverterKind, ConverterKinds);
 
-    /// Render content of tab window. Returns false if tab was closed.
-    bool RenderWindowContent() override;
+static const char* converterKindNames[] = {
+    "offline",
+    "online",
+    nullptr
+};
+
+class Converter : public Serializable
+{
+    URHO3D_OBJECT(Converter, Serializable);
+public:
+    ///
+    explicit Converter(Context* context);
+    ///
+    static void RegisterObject(Context* context);
+    ///
+    bool LoadJSON(const JSONValue& source) override;
+    ///
+    virtual void Execute(const String& resourcePath, const StringVector& input);
+    ///
+    static StringHash GetSerializedType(const JSONValue& source);
+    ///
+    ConverterKind GetKind() const { return kind_; }
 
 protected:
-    /// Constructs a name for newly created resource based on specified template name.
-    String GetNewResourcePath(const String& name);
-    /// Sends a notification to inspector tab to show inspector of specified resource.
-    template<typename TInspector, typename TResource>
-    void OpenResourceInspector(const String& resourcePath);
-
-    /// Current open resource path.
-    String resourcePath_;
-    /// Current selected resource file name.
-    String resourceSelection_;
-    /// Resource browser flags.
-    ResourceBrowserFlags flags_{RBF_NONE};
+    ///
+    String comment_{};
+    ///
+    ConverterKind kind_ = CONVERTER_OFFLINE;
+    ///
+    Vector<SharedPtr<Converter>> converters_;
 };
 
 }

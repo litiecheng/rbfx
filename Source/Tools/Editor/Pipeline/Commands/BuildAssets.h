@@ -23,20 +23,23 @@
 #pragma once
 
 
-#include "ImportAsset.h"
+#include "SubCommand.h"
 
 namespace Urho3D
 {
 
-class CookScene : public ImportAsset
+class BuildAssets : public SubCommand
 {
-    URHO3D_OBJECT(CookScene, ImportAsset);
+    URHO3D_OBJECT(BuildAssets, SubCommand);
 public:
-    explicit CookScene(Context* context);
-
-    bool Accepts(const String& path, ContentType type) override;
-
-    bool RunConverter(const String& path) override;
+    ///
+    explicit BuildAssets(Context* context);
+    ///
+    static void RegisterObject(Context* context);
+    ///
+    void RegisterCommandLine(CLI::App& cli) override;
+    ///
+    void Execute() override;
 };
 
 }
